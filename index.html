@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What to wear</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1c2830;--paper:#f1f5f7;--line:#d3dde3;--muted:#55666f;--row:#fff}
+@media (prefers-color-scheme:dark){:root{--ink:#e8eef2;--paper:#12191e;--line:#2a3640;--muted:#9aaab5;--row:#1a2329}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,sans-serif;line-height:1.4}
+header,main,footer{max-width:42rem;margin:0 auto;padding:1rem}
+h1{font-size:1.9rem;font-weight:800;letter-spacing:-.02em;margin:.5rem 0 1rem}
+.tools{display:flex;flex-wrap:wrap;gap:.5rem}
+.search{position:relative;flex:1 1 14rem}
+input,button{font:inherit;color:inherit;background:var(--row);border:1px solid var(--line);border-radius:.5rem;padding:.6rem .75rem}
+input{width:100%}
+button{cursor:pointer}
+:focus-visible{outline:3px solid #3b82c4;outline-offset:2px}
+#results{position:absolute;left:0;right:0;top:100%;margin:.25rem 0 0;padding:0;list-style:none;background:var(--row);border:1px solid var(--line);border-radius:.5rem;z-index:5;overflow:hidden}
+#results li{padding:.65rem .75rem;cursor:pointer}
+#results li:hover,#results li:focus{background:var(--paper)}
+h2{font-size:1.1rem;font-weight:600;color:var(--muted);margin:.75rem 0 .5rem}
+.day+.day{margin-top:1rem}
+ol{list-style:none;margin:0;padding:0}
+.row{display:grid;grid-template-columns:6rem 1fr auto;gap:.75rem;align-items:center;padding:.85rem .9rem;background:var(--row);border-left:.5rem solid var(--c);border-bottom:1px solid var(--line)}
+.row.first{padding-block:1.3rem}
+.row.first .outfit{font-size:1.4rem}
+.time{font-weight:600;font-size:.9rem;white-space:nowrap}
+.outfit{margin:0;font-size:1.1rem;font-weight:600}
+.meta{display:flex;flex-wrap:wrap;gap:0 1rem;margin-top:.15rem;font-size:.875rem;color:var(--muted)}
+.temp{font-size:1.9rem;font-weight:800;letter-spacing:-.03em;text-align:right;line-height:1}
+.temp small{display:block;margin-top:.2rem;font-size:.7rem;font-weight:400;letter-spacing:0;color:var(--muted)}
+#list>p{color:var(--muted)}
+footer{font-size:.8rem;color:var(--muted)}
+footer a{color:inherit}
+@media (min-width:900px){
+  header,main,footer{max-width:68rem}
+  #list{display:grid;grid-template-columns:1fr 1fr;gap:0 2rem;align-items:start}
+  .day+.day{margin-top:0}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1 id="place">Locating…</h1>
+  <div class="tools">
+    <div class="search">
+      <input id="q" type="search" placeholder="Search for a place" autocomplete="off"
+             role="combobox" aria-expanded="false" aria-controls="results" aria-label="Search for a place">
+      <ul id="results" role="listbox" hidden></ul>
+    </div>
+    <button id="locate" type="button">Use my location</button>
+    <button id="unit" type="button"></button>
+  </div>
+</header>
+<main id="list" aria-live="polite"></main>
+<footer>Weather data by <a href="https://open-meteo.com/">Open-Meteo.com</a></footer>
+
+<script>
+/* ---------- Clothing rules (feels-like in °C, wind in knots) ---------- */
+const WIND_KT = 10;
+
+function suggestClothing({ feelsLike, rainChance, windKt, uv, isDay, snow }) {
+  const tiers = [
+    [-5, ["heavy coat", "hat", "gloves", "scarf"]],
+    [5,  ["winter coat", "hat", "gloves"]],
+    [12, ["warm jacket", "long trousers"]],
+    [18, ["light jacket or sweater"]],
+    [24, ["long sleeves or t-shirt", "light layer"]],
+    [Infinity, ["t-shirt", "shorts"]],
+  ];
+  const items = [...tiers.find(([max]) => feelsLike < max)[1]];
+  const windy = windKt >= WIND_KT;
+
+  if (rainChance >= 70) items.push("waterproof jacket", "umbrella");
+  else if (rainChance >= 40) items.push("umbrella");
+  if (windy) items.push("windproof layer");
+  if (isDay && uv >= 6) items.push("sunglasses", "sunscreen");
+  if (snow) items.push("waterproof boots");
+
+  return {
+    items,
+    wind: { kt: Math.round(windKt), windy },
+    note: `Wind ${Math.round(windKt)} kt${windy ? " (brisk)" : ""}`,
+  };
+}
+
+/* ---------- Forecast: fixed 3-hour blocks, now through end of tomorrow ---------- */
+async function getBlocks(lat, lon) {
+  const url = "https://api.open-meteo.com/v1/forecast" +
+    `?latitude=${lat}&longitude=${lon}` +
+    "&hourly=apparent_temperature,precipitation_probability,wind_speed_10m,uv_index,is_day,snowfall" +
+    "&wind_speed_unit=kn&timezone=auto&forecast_days=2";
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Forecast request failed");
+  const data = await res.json();
+  const h = data.hourly;
+
+  const nowLocal = new Date(Date.now() + data.utc_offset_seconds * 1000)
+    .toISOString().slice(0, 16);                    // local time at the location
+  const today = nowLocal.slice(0, 10);
+  const tm = new Date(today + "T00:00:00Z");
+  tm.setUTCDate(tm.getUTCDate() + 1);
+  const tomorrowStr = tm.toISOString().slice(0, 10);
+  const nowHourStr = nowLocal.slice(0, 13);
+
+  const groups = {};
+  h.time.forEach((t, i) => {
+    const date = t.slice(0, 10);
+    const hour = parseInt(t.slice(11, 13), 10);
+    const start = hour - (hour % 3);
+    const key = date + "T" + String(start).padStart(2, "0");
+    if (t.slice(0, 13) < nowHourStr || date > tomorrowStr) return;
+    (groups[key] ??= { date, start, rows: [] }).rows.push(i);
+  });
+
+  const pad = (n) => String(n).padStart(2, "0");
+  return Object.entries(groups).sort().map(([, g], idx) => {
+    const pick = (arr) => g.rows.map((i) => arr[i] ?? 0);
+    const avg = (a) => a.reduce((s, x) => s + x, 0) / a.length;
+    const feelsLike = avg(pick(h.apparent_temperature));
+    const rainChance = Math.max(...pick(h.precipitation_probability));
+    const end = (g.start + 3) % 24;
+
+    const suggestion = suggestClothing({
+      feelsLike,
+      rainChance,
+      windKt: Math.max(...pick(h.wind_speed_10m)),
+      uv: Math.max(...pick(h.uv_index)),
+      isDay: pick(h.is_day).some((d) => d === 1),
+      snow: pick(h.snowfall).some((s) => s > 0),
+    });
+
+    return {
+      day: g.date === today ? "Today" : "Tomorrow",
+      label: idx === 0 ? `Now–${pad(end)}:00` : `${pad(g.start)}:00–${pad(end)}:00`,
+      feelsLike: Math.round(feelsLike),
+      rainChance,
+      ...suggestion,
+    };
+  });
+}
+
+/* ---------- Rendering ---------- */
+const $list = document.getElementById("list");
+const $place = document.getElementById("place");
+const $unit = document.getElementById("unit");
+let unit = "C", lastBlocks = [];
+try { unit = localStorage.getItem("unit") === "F" ? "F" : "C"; } catch {}
+
+function tempColor(c) {
+  return c < 0 ? "#2f5d8a" : c < 10 ? "#4f86b5" : c < 18 ? "#5fa38b" : c < 24 ? "#d9a441" : "#d4623a";
+}
+function deg(c) { return (unit === "F" ? Math.round(c * 9 / 5 + 32) : c) + "°"; }
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+
+function renderBlocks(blocks) {
+  lastBlocks = blocks;
+  $list.replaceChildren();
+  let day = null, ol = null;
+  blocks.forEach((b, i) => {
+    if (b.day !== day) {
+      day = b.day;
+      const section = el("section", "day");
+      section.append(el("h2", null, day));
+      ol = el("ol");
+      section.append(ol);
+      $list.append(section);
+    }
+    const li = el("li", "row" + (i === 0 ? " first" : ""));
+    li.style.setProperty("--c", tempColor(b.feelsLike));
+    li.append(el("div", "time", b.label));
+
+    const main = el("div");
+    const text = b.items.join(", ");
+    main.append(el("p", "outfit", text[0].toUpperCase() + text.slice(1)));
+    const meta = el("div", "meta");
+    meta.append(el("span", null, `Rain ${b.rainChance}%`), el("span", null, b.note));
+    main.append(meta);
+
+    const temp = el("div", "temp", deg(b.feelsLike));
+    temp.append(el("small", null, "feels like"));
+    li.append(main, temp);
+    ol.append(li);
+  });
+}
+
+function syncUnitButton() {
+  $unit.textContent = "°" + unit;
+  $unit.setAttribute("aria-label", `Temperatures in °${unit}. Switch to °${unit === "C" ? "F" : "C"}`);
+}
+$unit.addEventListener("click", () => {
+  unit = unit === "C" ? "F" : "C";
+  try { localStorage.setItem("unit", unit); } catch {}
+  syncUnitButton();
+  if (lastBlocks.length) renderBlocks(lastBlocks);
+});
+syncUnitButton();
+
+/* ---------- Location: device first, plus place search with autocomplete ---------- */
+async function loadLocation(lat, lon, name) {
+  $place.textContent = name;
+  $list.textContent = "Loading forecast…";
+  try {
+    renderBlocks(await getBlocks(lat, lon));
+  } catch {
+    $list.textContent = "Couldn't load the forecast. Check your connection and try again.";
+  }
+}
+
+function useDeviceLocation() {
+  if (!navigator.geolocation) return showSearchPrompt();
+  $place.textContent = "Locating…";
+  navigator.geolocation.getCurrentPosition(
+    (pos) => loadLocation(pos.coords.latitude, pos.coords.longitude, "Your location"),
+    showSearchPrompt,
+    { timeout: 10000, maximumAge: 10 * 60 * 1000 }
+  );
+}
+function showSearchPrompt() {
+  $place.textContent = "Search for a place";
+  $list.textContent = "Location is off or unavailable. Search for a place to see what to wear.";
+  $q.focus();
+}
+document.getElementById("locate").addEventListener("click", useDeviceLocation);
+
+const $q = document.getElementById("q");
+const $results = document.getElementById("results");
+let timer, latest = 0;
+
+$q.addEventListener("input", () => {
+  clearTimeout(timer);
+  const text = $q.value.trim();
+  if (text.length < 2) return closeResults();
+  timer = setTimeout(() => search(text), 250);
+});
+
+async function search(text) {
+  const id = ++latest;
+  const url = "https://geocoding-api.open-meteo.com/v1/search?count=6&language=en&name=" +
+              encodeURIComponent(text);
+  try {
+    const data = await (await fetch(url)).json();
+    if (id !== latest) return;
+    showResults(data.results || []);
+  } catch { closeResults(); }
+}
+
+function showResults(list) {
+  $results.replaceChildren();
+  if (!list.length) $results.append(el("li", null, "No matches"));
+  list.forEach((r) => {
+    const label = [r.name, r.admin1, r.country].filter(Boolean).join(", ");
+    const li = el("li", null, label);
+    li.setAttribute("role", "option");
+    li.tabIndex = 0;
+    const pick = () => { $q.value = ""; closeResults(); loadLocation(r.latitude, r.longitude, label); };
+    li.addEventListener("click", pick);
+    li.addEventListener("keydown", (e) => { if (e.key === "Enter") pick(); });
+    $results.append(li);
+  });
+  $results.hidden = false;
+  $q.setAttribute("aria-expanded", "true");
+}
+function closeResults() {
+  $results.hidden = true;
+  $q.setAttribute("aria-expanded", "false");
+}
+document.addEventListener("click", (e) => { if (!e.target.closest(".search")) closeResults(); });
+
+useDeviceLocation();
+</script>
+</body>
+</html>

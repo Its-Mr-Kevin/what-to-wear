@@ -32,8 +32,21 @@ button{cursor:pointer}
 h2{font-size:1.1rem;font-weight:600;color:var(--muted);margin:.75rem 0 .5rem}
 .day+.day{margin-top:1rem}
 ol{list-style:none;margin:0;padding:0}
-.row{display:grid;grid-template-columns:6rem 1fr auto;gap:.75rem;align-items:start;padding:.85rem .9rem;background:var(--row);border-left:.5rem solid var(--c);border-bottom:1px solid var(--line)}
-.row.first{padding-block:1.2rem}
+.row{background:var(--row);border-left:.5rem solid var(--c);border-bottom:1px solid var(--line)}
+.head{display:grid;grid-template-columns:6rem 1fr auto;gap:.75rem;align-items:start;width:100%;padding:.85rem .9rem;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;text-align:left}
+button.head{cursor:pointer}
+.row.first .head{padding-block:1.2rem}
+.chev{display:block;margin:.5rem 0 0 auto;width:1.25rem;height:1.25rem;fill:none;stroke:var(--muted);stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+[aria-expanded="true"] .chev{transform:rotate(180deg)}
+.panel{display:flex;flex-wrap:wrap;gap:1rem 1.25rem;padding:.25rem .9rem 1.25rem}
+.panel[hidden]{display:none}
+.grp-t{margin:0 0 .5rem;font-size:.7rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.cards{display:flex;gap:.5rem;align-items:flex-start}
+.card{width:4.75rem;display:flex;flex-direction:column;align-items:center;gap:.4rem;text-align:center;font-size:.75rem;font-weight:600;line-height:1.25}
+.tile{position:relative;width:4rem;height:4rem;border-radius:.9rem;background:var(--paper);border:1px solid var(--line);display:flex;align-items:center;justify-content:center}
+.tile svg{width:2.75rem;height:2.75rem;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.badge{position:absolute;top:-.4rem;left:-.4rem;width:1.25rem;height:1.25rem;border-radius:50%;background:var(--ink);color:var(--paper);font-size:.7rem;font-weight:800;display:flex;align-items:center;justify-content:center}
+.or{align-self:flex-start;margin-top:1.4rem;font-size:.75rem;color:var(--muted)}
 .time{font-weight:600;font-size:.9rem;white-space:nowrap}
 .layers{margin:0 0 .15rem;font-size:.8rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em}
 .outfit{margin:0;font-size:1.1rem;font-weight:600}
@@ -53,6 +66,26 @@ footer a{color:inherit}
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-tshirt" viewBox="0 0 48 48"><path d="M16 8 L8 13 L12 20 L16 18 V40 H32 V18 L36 20 L40 13 L32 8 C31 11 28 13 24 13 C20 13 17 11 16 8 Z"/></symbol>
+<symbol id="i-jumper" viewBox="0 0 48 48"><path d="M17 8 L9 12 L7 34 L13 35 L15 22 V40 H33 V22 L35 35 L41 34 L39 12 L31 8 C30 11 27 13 24 13 C21 13 18 11 17 8 Z M15 35 H33"/></symbol>
+<symbol id="i-coat" viewBox="0 0 48 48"><path d="M17 7 L9 11 L7 35 L13 36 L15 22 V42 H33 V22 L35 36 L41 35 L39 11 L31 7 L24 17 Z M24 17 V42 M28 27 h.01 M28 33 h.01"/></symbol>
+<symbol id="i-beanie" viewBox="0 0 48 48"><path d="M12 28 C12 17 17 11 24 11 C31 11 36 17 36 28 M10 28 H38 V35 H10 Z M24 11 V10 M21 6.5 a3 3 0 1 0 6 0 a3 3 0 1 0 -6 0"/></symbol>
+<symbol id="i-mitten" viewBox="0 0 48 48"><path d="M15 40 V21 C15 13 19 8 25 8 C31 8 34 13 34 20 V40 M14 40 H35 V45 H14 Z M34 27 C39 26 42 23 41 19 C40 16 37 17 36 20"/></symbol>
+<symbol id="i-jeans" viewBox="0 0 48 48"><path d="M15 6 H33 L35 42 H27 L24 19 L21 42 H13 Z M15 12 H33 M24 12 V19"/></symbol>
+<symbol id="i-leggings" viewBox="0 0 48 48"><path d="M17 6 H31 L32 42 H26 L24 21 L22 42 H16 Z M17 12 H31"/></symbol>
+<symbol id="i-umbrella" viewBox="0 0 48 48"><path d="M6 26 C6 14 14 8 24 8 C34 8 42 14 42 26 C39 23 36 23 33 26 C30 23 27 23 24 26 C21 23 18 23 15 26 C12 23 9 23 6 26 Z M24 26 V38 C24 41 21 42 19 40 M24 8 V5"/></symbol>
+<symbol id="i-welly" viewBox="0 0 48 48"><path d="M14 6 H27 V26 L37 30 C41 31 42 35 42 38 V42 H14 Z M14 12 H27"/></symbol>
+<symbol id="i-glove" viewBox="0 0 48 48"><path d="M16 38 V32 L9 25 C7 22 10 19 13 22 L16 25 V13 C16 9 21 9 21 13 V11 C21 6 26 6 26 11 V13 C26 9 31 9 31 13 V16 C31 12 35 12 35 16 V38 M15 38 H36 V44 H15 Z M21 13 V26 M26 13 V26 M31 16 V26"/></symbol>
+<symbol id="i-shorts" viewBox="0 0 48 48"><path d="M14 8 H34 L37 30 H27 L24 19 L21 30 H11 Z M14 14 H34"/></symbol>
+<symbol id="i-skirt" viewBox="0 0 48 48"><path d="M16 10 H32 L40 38 H8 Z M16 16 H32"/></symbol>
+<symbol id="i-joggers" viewBox="0 0 48 48"><path d="M15 6 H33 L34 40 H26 L24 19 L22 40 H14 Z M15 12 H33 M14.5 35 H22.5 M25.5 35 H33.5"/></symbol>
+<symbol id="i-scarf" viewBox="0 0 48 48"><path d="M9 14 H39 V22 H9 Z M17 22 V40 H25 V22 M25 22 V36 H33 V22"/></symbol>
+<symbol id="i-socks" viewBox="0 0 48 48"><path d="M16 6 H30 V26 L40 32 C43 34 42 40 38 40 H24 C20 40 16 37 16 32 Z M16 12 H30"/></symbol>
+<symbol id="i-boot" viewBox="0 0 48 48"><path d="M14 12 H27 V28 L37 31 C41 32 42 35 42 38 V42 H14 Z M14 37 H42"/></symbol>
+<symbol id="i-sunhat" viewBox="0 0 48 48"><path d="M8 30 C8 34 40 34 40 30 C40 27 36 25 34 24 C34 15 30 10 24 10 C18 10 14 15 14 24 C12 25 8 27 8 30 Z M14 24 C18 26 30 26 34 24"/></symbol>
+<symbol id="i-suncream" viewBox="0 0 48 48"><path d="M18 18 H30 V40 C30 41 29 42 28 42 H20 C19 42 18 41 18 40 Z M20 18 V12 H28 V18 M22 12 V8 H26 V12 M18 26 H30"/></symbol>
+</defs></svg>
 <header>
   <h1 id="place">Locating…</h1>
   <div class="tools">
@@ -82,23 +115,54 @@ footer a{color:inherit}
 const UMBRELLA_CUTOFF_KT = 11;   // Beaufort force 4 and above: no umbrella
 const WARM_LEGS = "thermals plus jeans or joggers (ski-trousers for play)";
 const COLD_TOP = "Thermal base, jumper or hoodie, insulated coat; hat, mittens, scarf, boots";
+const COLD_ICONS = {
+  layers: ["thermal", "jumper", "insulatedcoat"], acc: ["hat", "mittens", "scarf", "boots"], accTitle: "Wear",
+  boys: [["thermallegs", "jeans"], ["thermallegs", "joggers"], ["skitrousers"]],
+  girls: [["thermallegs", "jeans"], ["thermallegs", "joggers"], ["skitrousers"]],
+};
 const bands = [
-  { below: -20, layers: 4, note: "limit time outside", top: COLD_TOP, boys: WARM_LEGS, girls: WARM_LEGS },
-  { below: -5,  layers: 4, top: COLD_TOP, boys: WARM_LEGS, girls: WARM_LEGS },
+  { below: -20, layers: 4, note: "limit time outside", top: COLD_TOP, boys: WARM_LEGS, girls: WARM_LEGS, icons: COLD_ICONS },
+  { below: -5,  layers: 4, top: COLD_TOP, boys: WARM_LEGS, girls: WARM_LEGS, icons: COLD_ICONS },
   { below: 5,   layers: 3, note: "plus accessories",
     top: "Top, jumper or hoodie, winter coat; hat, gloves, warm socks",
-    boys: "jeans or joggers over thermals", girls: "thermal tights or leggings under jeans or joggers" },
+    boys: "jeans or joggers over thermals", girls: "thermal tights or leggings under jeans or joggers",
+    icons: { layers: ["top", "jumper", "wintercoat"], acc: ["hat", "gloves", "socks"], accTitle: "Wear",
+      boys: [["thermallegs", "jeans"], ["thermallegs", "joggers"]],
+      girls: [["thermaltights", "jeans"], ["thermaltights", "joggers"]] } },
   { below: 12,  layers: 3,
     top: "Top, jumper or hoodie, warm coat; hat and gloves in a pocket",
-    boys: "jeans or joggers", girls: "jeans or leggings; thick tights under a skirt or dress" },
+    boys: "jeans or joggers", girls: "jeans or leggings; thick tights under a skirt or dress",
+    icons: { layers: ["top", "jumper", "warmcoat"], acc: ["hat", "gloves"], accTitle: "In a pocket",
+      boys: [["jeans"], ["joggers"]], girls: [["jeans"], ["leggings"], ["thicktights", "skirtdress"]] } },
   { below: 18,  layers: 2,
     top: "T-shirt plus jumper or hoodie, or a light coat",
-    boys: "joggers or jeans", girls: "joggers or leggings; tights under a skirt or dress" },
+    boys: "joggers or jeans", girls: "joggers or leggings; tights under a skirt or dress",
+    icons: { layers: ["tshirt", ["jumper", "lightcoat"]], acc: [],
+      boys: [["joggers"], ["jeans"]], girls: [["joggers"], ["leggings"], ["tights", "skirtdress"]] } },
   { below: 24,  layers: 1, note: "plus a spare",
     top: "T-shirt; light layer in the bag",
-    boys: "shorts or joggers", girls: "shorts, joggers, skirt or dress" },
-  { below: Infinity, layers: 1, top: "T-shirt", boys: "shorts", girls: "shorts, skirt or dress" },
+    boys: "shorts or joggers", girls: "shorts, joggers, skirt or dress",
+    icons: { layers: ["tshirt"], acc: ["spare"], accTitle: "In the bag",
+      boys: [["shorts"], ["joggers"]], girls: [["shorts"], ["joggers"], ["skirtdress"]] } },
+  { below: Infinity, layers: 1, top: "T-shirt", boys: "shorts", girls: "shorts, skirt or dress",
+    icons: { layers: ["tshirt"], acc: [], boys: [["shorts"]], girls: [["shorts"], ["skirtdress"]] } },
 ];
+
+/* Icon for each item: [symbol in the sprite, label] */
+const ITEM = {
+  top: ["tshirt", "Top"], tshirt: ["tshirt", "T-shirt"], jumper: ["jumper", "Jumper or hoodie"],
+  thermal: ["jumper", "Thermal base"], spare: ["jumper", "Light layer"],
+  lightcoat: ["coat", "Light coat"], warmcoat: ["coat", "Warm coat"], wintercoat: ["coat", "Winter coat"],
+  insulatedcoat: ["coat", "Insulated coat"], wcoat: ["coat", "Waterproof coat"],
+  hat: ["beanie", "Hat"], gloves: ["glove", "Gloves"], mittens: ["mitten", "Mittens"], scarf: ["scarf", "Scarf"],
+  socks: ["socks", "Warm socks"], boots: ["boot", "Boots"],
+  shorts: ["shorts", "Shorts"], joggers: ["joggers", "Joggers"], jeans: ["jeans", "Jeans"],
+  leggings: ["leggings", "Leggings"], tights: ["leggings", "Tights"], thicktights: ["leggings", "Thick tights"],
+  thermaltights: ["leggings", "Thermal tights or leggings"], thermallegs: ["leggings", "Thermals"],
+  skirtdress: ["skirt", "Skirt or dress"], skitrousers: ["jeans", "Ski-trousers for play"],
+  umbrella: ["umbrella", "Umbrella"], wellies: ["welly", "Wellies"],
+  sunhat: ["sunhat", "Sun hat"], suncream: ["suncream", "Suncream"], snowboots: ["boot", "Waterproof boots"],
+};
 
 /* Celsius wind chill; valid at 10°C or below with wind above 4.8 km/h,
    otherwise the air temperature is used as it is. */
@@ -110,18 +174,20 @@ function windChill(tC, windKt) {
 }
 
 function advise(b, mode, gender) {
+  const windy = b.windKt >= UMBRELLA_CUTOFF_KT;
   const rain = b.rainChance >= 40
-    ? (b.windKt >= UMBRELLA_CUTOFF_KT ? "Waterproof coat" : "Waterproof coat, or an umbrella")
-    : null;
-  if (mode === "school") return { school: true, extras: rain ? [rain] : [] };
+    ? (windy ? "Waterproof coat" : "Waterproof coat, or an umbrella") : null;
+  const ex = [];   // icon groups for the extras
+  if (rain) ex.push({ title: "If it rains", alts: windy ? [["wcoat"]] : [["wcoat"], ["umbrella"]] });
+  if (mode === "school") return { school: true, extras: rain ? [rain] : [], ex };
 
   const band = bands.find((x) => b.windChill < x.below);
   const extras = [];
   if (rain) extras.push(rain);
-  if (b.rainChance >= 70) extras.push("Waterproof shoes or wellies");
-  if (b.isDay && b.uv >= 6) extras.push("Sun hat, suncream");
-  if (b.snow) extras.push("Waterproof boots");
-  return { band, legs: band[gender], extras };
+  if (b.rainChance >= 70) { extras.push("Waterproof shoes or wellies"); ex.push({ title: "Feet", alts: [["wellies"]] }); }
+  if (b.isDay && b.uv >= 6) { extras.push("Sun hat, suncream"); ex.push({ title: "Sun", alts: [["sunhat", "suncream"]] }); }
+  if (b.snow) { extras.push("Waterproof boots"); ex.push({ title: "Snow", alts: [["snowboots"]] }); }
+  return { band, legs: band[gender], extras, ex };
 }
 
 /* ---------- Forecast: fixed 3-hour blocks, now through end of tomorrow ---------- */
@@ -195,6 +261,55 @@ function el(tag, cls, text) {
   return e;
 }
 
+function card(id, badge) {
+  const [sym, label] = ITEM[id];
+  const c = el("div", "card");
+  const tile = el("div", "tile");
+  tile.innerHTML = `<svg viewBox="0 0 48 48" aria-hidden="true"><use href="#i-${sym}"/></svg>`;
+  if (badge) tile.append(el("span", "badge", String(badge)));
+  c.append(tile, el("span", null, label));
+  return c;
+}
+function plain(ids) {
+  const w = el("div", "cards");
+  ids.forEach((id) => w.append(card(id)));
+  return w;
+}
+/* groups = alternatives; items inside a group are worn together */
+function alts(groups, badge) {
+  const w = el("div", "cards");
+  groups.forEach((g, gi) => {
+    if (gi) w.append(el("span", "or", "or"));
+    g.forEach((id, k) => { if (k) w.append(el("span", "or", "+")); w.append(card(id, badge)); });
+  });
+  return w;
+}
+function section(title, node) {
+  const s = el("div");
+  s.append(el("p", "grp-t", title), node);
+  return s;
+}
+function buildPanel(a) {
+  const panel = el("div", "panel");
+  panel.hidden = true;
+  if (!a.school) {
+    const ic = a.band.icons, layers = el("div", "cards");
+    ic.layers.forEach((entry, n) =>
+      layers.append(alts(Array.isArray(entry) ? entry.map((x) => [x]) : [[entry]], n + 1)));
+    panel.append(section("Layers, inner to outer", layers));
+    if (ic.acc.length) panel.append(section(ic.accTitle, plain(ic.acc)));
+    panel.append(section(`Legs, ${gender}`, alts(ic[gender])));
+  }
+  a.ex.forEach((e) => panel.append(section(e.title, alts(e.alts))));
+  return panel;
+}
+function closeAll() {
+  $list.querySelectorAll('.head[aria-expanded="true"]').forEach((h) => {
+    h.setAttribute("aria-expanded", "false");
+    h.nextElementSibling.hidden = true;
+  });
+}
+
 function renderBlocks(blocks) {
   lastBlocks = blocks;
   $list.replaceChildren();
@@ -209,9 +324,13 @@ function renderBlocks(blocks) {
       $list.append(section);
     }
     const a = advise(b, mode, gender);
+    const panel = buildPanel(a);
+    const hasPanel = panel.childElementCount > 0;
     const li = el("li", "row" + (i === 0 ? " first" : ""));
     li.style.setProperty("--c", tempColor(b.windChill));
-    li.append(el("div", "time", b.label));
+
+    const head = el(hasPanel ? "button" : "div", "head");
+    head.append(el("div", "time", b.label));
 
     const main = el("div");
     if (a.school) {
@@ -230,7 +349,19 @@ function renderBlocks(blocks) {
 
     const temp = el("div", "temp", deg(b.airTemp));
     temp.append(el("small", null, "air temp"));
-    li.append(main, temp);
+    if (hasPanel) {
+      temp.insertAdjacentHTML("beforeend", '<svg class="chev" viewBox="0 0 48 48" aria-hidden="true"><path d="M12 18 L24 30 L36 18"/></svg>');
+      head.type = "button";
+      head.setAttribute("aria-expanded", "false");
+      head.addEventListener("click", () => {
+        const wasOpen = head.getAttribute("aria-expanded") === "true";
+        closeAll();                                   // only one block open at a time
+        if (!wasOpen) { panel.hidden = false; head.setAttribute("aria-expanded", "true"); }
+      });
+    }
+    head.append(main, temp);
+    li.append(head);
+    if (hasPanel) li.append(panel);
     ol.append(li);
   });
 }

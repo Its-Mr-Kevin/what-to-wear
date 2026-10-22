@@ -44,6 +44,7 @@ h2{font-size:1.1rem;font-weight:600;color:var(--muted);margin:.75rem 0 .5rem}
 .summary p{margin:0}
 .summary .big{font-size:1.4rem;font-weight:800;letter-spacing:-.02em;line-height:1.2}
 .summary .when{font-size:.85rem;opacity:.85}
+.summary .tags{margin-top:.4rem;font-size:1rem;font-weight:600}
 ol{list-style:none;margin:0;padding:0}
 .row{background:var(--row);border-left:.5rem solid var(--c);border-bottom:1px solid var(--line)}
 .head{display:grid;grid-template-columns:1fr auto;grid-template-areas:"time temp" "main main";gap:.5rem .75rem;align-items:center;width:100%;padding:.85rem .9rem;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;text-align:left}
@@ -353,22 +354,46 @@ function layerText(band) {
   const n = band.layers;
   return `${n} layer${n > 1 ? "s" : ""}` + (band.note ? (band.note[0] === "+" ? " " : ", ") + band.note : "");
 }
-/* Most layers needed between 06:00 and 21:00 (blocks starting 06, 09, 12, 15, 18) */
+/* Condition tags for a set of blocks: strongest tag per family, families can combine */
+function conditionTags(win) {
+  const temps = win.map((x) => x.airTemp);
+  const minT = Math.min(...temps), maxT = Math.max(...temps);
+  const rain = Math.max(...win.map((x) => x.rainChance));
+  const wind = Math.max(...win.map((x) => x.windKt));
+  const tags = [];
+  if (rain > 50) tags.push("wet"); else if (rain > 20) tags.push("showers");
+  if (minT < 8) tags.push("cold"); else if (minT < 15) tags.push("chilly");
+  if (maxT > 27) tags.push("hot"); else if (maxT > 20) tags.push("warm");
+  if (wind > 22) tags.push("very windy"); else if (wind > 17) tags.push("windy"); else if (wind > 11) tags.push("breezy");
+  const text = tags.join(", ");
+  return text ? text[0].toUpperCase() + text.slice(1) : "";
+}
+
+/* Daily summary for 06:00 to 21:00 (blocks starting 06, 09, 12, 15, 18) */
 function summarise(list) {
   const win = list.filter((x) => x.start >= 6 && x.start < 21);
+  if (!win.length) return null;
+  const tags = conditionTags(win);
+  const span = win[0].label.split("–")[0] + "–21:00";
+  const box = el("div", "summary");
+
+  if (mode === "school") {                     // school day: conditions only
+    if (!tags) return null;
+    box.append(el("p", "layers", `Conditions, ${span}`), el("p", "big", tags));
+    return box;
+  }
   let best = null;
   win.forEach((x) => {
     const band = advise(x, "casual", gender).band;
     if (!best || band.layers > best.band.layers ||
         (band.layers === best.band.layers && x.windChill < best.x.windChill)) best = { x, band };
   });
-  if (!best) return null;
-  const box = el("div", "summary");
   box.append(
-    el("p", "layers", `Most layers, ${win[0].label.split("–")[0]}–21:00`),
+    el("p", "layers", `Most layers, ${span}`),
     el("p", "big", layerText(best.band)),
     el("p", "when", `Coldest at ${best.x.label}`)
   );
+  if (tags) box.append(el("p", "tags", tags));
   return box;
 }
 
@@ -381,7 +406,7 @@ function renderBlocks(blocks) {
       day = b.day;
       const section = el("section", "day");
       section.append(el("h2", null, day));
-      const sum = mode === "school" ? null : summarise(blocks.filter((x) => x.day === day));
+      const sum = summarise(blocks.filter((x) => x.day === day));
       if (sum) section.append(sum);
       ol = el("ol");
       section.append(ol);

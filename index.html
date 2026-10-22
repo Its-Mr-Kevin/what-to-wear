@@ -13,9 +13,18 @@
 *{box-sizing:border-box}
 body{margin:0;background:var(--paper);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,sans-serif;line-height:1.4}
 header,main,footer{max-width:42rem;margin:0 auto;padding:1rem}
-h1{font-size:1.9rem;font-weight:800;letter-spacing:-.02em;margin:.5rem 0 1rem}
-.tools{display:flex;flex-wrap:wrap;gap:.5rem}
-.search{position:relative;flex:1 1 100%}
+header{padding-block:.75rem}
+h1{margin:0;font-size:1.1rem;font-weight:800;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar{display:flex;align-items:center;gap:.5rem}
+.where{display:flex;align-items:center;gap:.4rem;flex:1;min-width:0}
+.where svg,.bar button svg{width:1.25rem;height:1.25rem;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.bar button{display:flex;align-items:center;justify-content:center;min-width:2.5rem;min-height:2.5rem;padding:.4rem}
+#unit{font-weight:600}
+.pair{display:flex;gap:.5rem;margin-top:.5rem}
+.pair .seg{flex:1}
+.seg button{flex:1;font-size:.85rem;padding:.45rem .4rem;white-space:nowrap}
+.search{position:relative;margin-top:.5rem}
+.search[hidden]{display:none}
 input,button{font:inherit;color:inherit;background:var(--row);border:1px solid var(--line);border-radius:.5rem;padding:.6rem .75rem}
 input{width:100%}
 button{cursor:pointer}
@@ -31,6 +40,10 @@ button{cursor:pointer}
 #results li:hover,#results li:focus{background:var(--paper)}
 h2{font-size:1.1rem;font-weight:600;color:var(--muted);margin:.75rem 0 .5rem}
 .day+.day{margin-top:1rem}
+.summary{margin-bottom:.5rem;padding:.8rem .9rem;border-radius:.5rem;background:var(--ink);color:var(--paper)}
+.summary p{margin:0}
+.summary .big{font-size:1.4rem;font-weight:800;letter-spacing:-.02em;line-height:1.2}
+.summary .when{font-size:.85rem;opacity:.85}
 ol{list-style:none;margin:0;padding:0}
 .row{background:var(--row);border-left:.5rem solid var(--c);border-bottom:1px solid var(--line)}
 .head{display:grid;grid-template-columns:1fr auto;grid-template-areas:"time temp" "main main";gap:.5rem .75rem;align-items:center;width:100%;padding:.85rem .9rem;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;text-align:left}
@@ -60,7 +73,7 @@ button.head{cursor:pointer}
 #list>p{color:var(--muted)}
 footer{font-size:.8rem;color:var(--muted)}
 footer a{color:inherit}
-.warmth{flex:1 1 100%;display:flex;flex-wrap:wrap;align-items:center;gap:.25rem .75rem;font-size:.875rem;color:var(--muted)}
+.warmth{margin-top:.5rem;display:flex;flex-wrap:wrap;align-items:center;gap:.1rem .75rem;font-size:.8rem;color:var(--muted)}
 .warmth[hidden]{display:none}
 .warmth input{flex:1 1 8rem;width:auto;min-width:8rem;height:2rem;padding:0;border:0;background:transparent;accent-color:var(--ink)}
 .warmth output{flex:1 1 100%}
@@ -93,15 +106,25 @@ footer a{color:inherit}
 <symbol id="i-suncream" viewBox="0 0 48 48"><path d="M18 18 H30 V40 C30 41 29 42 28 42 H20 C19 42 18 41 18 40 Z M20 18 V12 H28 V18 M22 12 V8 H26 V12 M18 26 H30"/></symbol>
 </defs></svg>
 <header>
-  <h1 id="place">Locating…</h1>
-  <div class="tools">
-    <div class="search">
-      <input id="q" type="search" placeholder="Search for a place" autocomplete="off"
-             role="combobox" aria-expanded="false" aria-controls="results" aria-label="Search for a place">
-      <ul id="results" role="listbox" hidden></ul>
+  <div class="bar">
+    <div class="where">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>
+      <h1 id="place">Locating…</h1>
     </div>
-    <button id="locate" type="button">Use my location</button>
+    <button id="searchBtn" type="button" aria-label="Search for a place" aria-expanded="false" aria-controls="searchBox">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+    </button>
+    <button id="locate" type="button" aria-label="Use my location" title="Use my location">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
+    </button>
     <button id="unit" type="button"></button>
+  </div>
+  <div class="search" id="searchBox" hidden>
+    <input id="q" type="search" placeholder="Search for a place" autocomplete="off"
+           role="combobox" aria-expanded="false" aria-controls="results" aria-label="Search for a place">
+    <ul id="results" role="listbox" hidden></ul>
+  </div>
+  <div class="pair">
     <div class="seg" id="modeSeg" role="group" aria-label="Mode">
       <button type="button" data-mode="casual">Casual</button>
       <button type="button" data-mode="school">School day</button>
@@ -110,12 +133,12 @@ footer a{color:inherit}
       <button type="button" data-gender="boys">Boys</button>
       <button type="button" data-gender="girls">Girls</button>
     </div>
-    <div class="warmth" id="warmthRow">
-      <span>Runs cold</span>
-      <input id="warmth" type="range" min="-3" max="3" step="1" value="0" aria-label="How warm you run">
-      <span>Runs hot</span>
-      <output id="warmthNote" for="warmth"></output>
-    </div>
+  </div>
+  <div class="warmth" id="warmthRow">
+    <span>Runs cold</span>
+    <input id="warmth" type="range" min="-3" max="3" step="1" value="0" aria-label="How warm you run">
+    <span>Runs hot</span>
+    <output id="warmthNote" for="warmth"></output>
   </div>
 </header>
 <main id="list" aria-live="polite"></main>
@@ -126,55 +149,55 @@ footer a{color:inherit}
    Bands are chosen by wind chill (°C). Edit this table to tune the advice. */
 const WARMTH_STEP_C = 2;        // each slider step shifts the temperature used to pick the band
 const UMBRELLA_CUTOFF_KT = 11;   // Beaufort force 4 and above: no umbrella
-const WARM_LEGS = "thermals plus jeans or joggers (ski-trousers for play)";
-const COLD_TOP = "Thermal base, jumper or hoodie, insulated coat; hat, mittens, scarf, boots";
+const WARM_LEGS = "thermals + jeans/joggers (ski-trousers for play)";
+const COLD_TOP = "Thermal base, jumper/hoodie, coat; hat, mittens, scarf, boots";
 const COLD_ICONS = {
   layers: ["thermal", "jumper", "insulatedcoat"], acc: ["hat", "mittens", "scarf", "boots"], accTitle: "Wear",
   boys: [["thermallegs", "jeans"], ["thermallegs", "joggers"], ["skitrousers"]],
   girls: [["thermallegs", "jeans"], ["thermallegs", "joggers"], ["skitrousers"]],
 };
 const bands = [
-  { below: -20, layers: 4, note: "limit time outside", top: COLD_TOP, boys: WARM_LEGS, girls: WARM_LEGS, icons: COLD_ICONS },
+  { below: -20, layers: 4, note: "limit time out", top: COLD_TOP, boys: WARM_LEGS, girls: WARM_LEGS, icons: COLD_ICONS },
   { below: -5,  layers: 4, top: COLD_TOP, boys: WARM_LEGS, girls: WARM_LEGS, icons: COLD_ICONS },
-  { below: 5,   layers: 3, note: "plus accessories",
-    top: "Top, jumper or hoodie, winter coat; hat, gloves, warm socks",
-    boys: "jeans or joggers over thermals", girls: "thermal tights or leggings under jeans or joggers",
+  { below: 5,   layers: 3, note: "+ accessories",
+    top: "Top, jumper/hoodie, coat; hat, gloves, warm socks",
+    boys: "jeans/joggers over thermals", girls: "thermals under jeans/joggers",
     icons: { layers: ["top", "jumper", "wintercoat"], acc: ["hat", "gloves", "socks"], accTitle: "Wear",
       boys: [["thermallegs", "jeans"], ["thermallegs", "joggers"]],
       girls: [["thermaltights", "jeans"], ["thermaltights", "joggers"]] } },
   { below: 12,  layers: 3,
-    top: "Top, jumper or hoodie, warm coat; hat and gloves in a pocket",
-    boys: "jeans or joggers", girls: "jeans or leggings; thick tights under a skirt or dress",
+    top: "Top, jumper/hoodie, coat; hat, gloves in pocket",
+    boys: "jeans/joggers", girls: "jeans/leggings; thick tights under skirt/dress",
     icons: { layers: ["top", "jumper", "warmcoat"], acc: ["hat", "gloves"], accTitle: "In a pocket",
       boys: [["jeans"], ["joggers"]], girls: [["jeans"], ["leggings"], ["thicktights", "skirtdress"]] } },
   { below: 18,  layers: 2,
-    top: "T-shirt plus jumper or hoodie, or a light coat",
-    boys: "joggers or jeans", girls: "joggers or leggings; tights under a skirt or dress",
+    top: "T-shirt + jumper/hoodie or coat",
+    boys: "joggers/jeans", girls: "joggers/leggings; tights under skirt/dress",
     icons: { layers: ["tshirt", ["jumper", "lightcoat"]], acc: [],
       boys: [["joggers"], ["jeans"]], girls: [["joggers"], ["leggings"], ["tights", "skirtdress"]] } },
-  { below: 24,  layers: 1, note: "plus a spare",
-    top: "T-shirt; light layer in the bag",
-    boys: "shorts or joggers", girls: "shorts, joggers, skirt or dress",
+  { below: 24,  layers: 1, note: "+ spare",
+    top: "T-shirt; spare layer in bag",
+    boys: "shorts/joggers", girls: "shorts/joggers/skirt/dress",
     icons: { layers: ["tshirt"], acc: ["spare"], accTitle: "In the bag",
       boys: [["shorts"], ["joggers"]], girls: [["shorts"], ["joggers"], ["skirtdress"]] } },
-  { below: Infinity, layers: 1, top: "T-shirt", boys: "shorts", girls: "shorts, skirt or dress",
+  { below: Infinity, layers: 1, top: "T-shirt", boys: "shorts", girls: "shorts/skirt/dress",
     icons: { layers: ["tshirt"], acc: [], boys: [["shorts"]], girls: [["shorts"], ["skirtdress"]] } },
 ];
 
 /* Icon for each item: [symbol in the sprite, label] */
 const ITEM = {
-  top: ["tshirt", "Top"], tshirt: ["tshirt", "T-shirt"], jumper: ["jumper", "Jumper or hoodie"],
-  thermal: ["jumper", "Thermal base"], spare: ["jumper", "Light layer"],
-  lightcoat: ["coat", "Light coat"], warmcoat: ["coat", "Warm coat"], wintercoat: ["coat", "Winter coat"],
-  insulatedcoat: ["coat", "Insulated coat"], wcoat: ["coat", "Waterproof coat"],
+  top: ["tshirt", "Top"], tshirt: ["tshirt", "T-shirt"], jumper: ["jumper", "Jumper/hoodie"],
+  thermal: ["jumper", "Thermal base"], spare: ["jumper", "Spare layer"],
+  lightcoat: ["coat", "Coat"], warmcoat: ["coat", "Coat"], wintercoat: ["coat", "Coat"],
+  insulatedcoat: ["coat", "Coat"], wcoat: ["coat", "Rain coat"],
   hat: ["beanie", "Hat"], gloves: ["glove", "Gloves"], mittens: ["mitten", "Mittens"], scarf: ["scarf", "Scarf"],
   socks: ["socks", "Warm socks"], boots: ["boot", "Boots"],
   shorts: ["shorts", "Shorts"], joggers: ["joggers", "Joggers"], jeans: ["jeans", "Jeans"],
   leggings: ["leggings", "Leggings"], tights: ["leggings", "Tights"], thicktights: ["leggings", "Thick tights"],
-  thermaltights: ["leggings", "Thermal tights or leggings"], thermallegs: ["leggings", "Thermals"],
-  skirtdress: ["skirt", "Skirt or dress"], skitrousers: ["jeans", "Ski-trousers for play"],
-  umbrella: ["umbrella", "Umbrella"], wellies: ["welly", "Wellies"],
-  sunhat: ["sunhat", "Sun hat"], suncream: ["suncream", "Suncream"], snowboots: ["boot", "Waterproof boots"],
+  thermaltights: ["leggings", "Thermals"], thermallegs: ["leggings", "Thermals"],
+  skirtdress: ["skirt", "Skirt/dress"], skitrousers: ["jeans", "Ski-trousers"],
+  umbrella: ["umbrella", "Umbrella"], wellies: ["welly", "Wet weather shoes"],
+  sunhat: ["sunhat", "Sun hat"], suncream: ["suncream", "Suncream"], snowboots: ["boot", "Snow boots"],
 };
 
 /* Celsius wind chill; valid at 10°C or below with wind above 4.8 km/h,
@@ -189,7 +212,7 @@ function windChill(tC, windKt) {
 function advise(b, mode, gender) {
   const windy = b.windKt >= UMBRELLA_CUTOFF_KT;
   const rain = b.rainChance >= 40
-    ? (windy ? "Waterproof coat" : "Waterproof coat, or an umbrella") : null;
+    ? (windy ? "Rain coat" : "Rain coat/umbrella") : null;
   const ex = [];   // icon groups for the extras
   if (rain) ex.push({ title: "If it rains", alts: windy ? [["wcoat"]] : [["wcoat"], ["umbrella"]] });
   if (mode === "school") return { school: true, extras: rain ? [rain] : [], ex };
@@ -197,9 +220,9 @@ function advise(b, mode, gender) {
   const band = bands.find((x) => b.windChill + warmth * WARMTH_STEP_C < x.below);
   const extras = [];
   if (rain) extras.push(rain);
-  if (b.rainChance >= 70) { extras.push("Waterproof shoes or wellies"); ex.push({ title: "Feet", alts: [["wellies"]] }); }
+  if (b.rainChance >= 70) { extras.push("Wet weather shoes"); ex.push({ title: "Feet", alts: [["wellies"]] }); }
   if (b.isDay && b.uv >= 6) { extras.push("Sun hat, suncream"); ex.push({ title: "Sun", alts: [["sunhat", "suncream"]] }); }
-  if (b.snow) { extras.push("Waterproof boots"); ex.push({ title: "Snow", alts: [["snowboots"]] }); }
+  if (b.snow) { extras.push("Snow boots"); ex.push({ title: "Snow", alts: [["snowboots"]] }); }
   return { band, legs: band[gender], extras, ex };
 }
 
@@ -240,6 +263,7 @@ async function getBlocks(lat, lon) {
     const end = (g.start + 3) % 24;
     return {
       day: g.date === today ? "Today" : "Tomorrow",
+      start: g.start,
       label: idx === 0 ? `Now–${pad(end)}:00` : `${pad(g.start)}:00–${pad(end)}:00`,
       airTemp: avg(temps),
       windChill: avg(temps.map((t, k) => windChill(t, winds[k]))),
@@ -325,6 +349,29 @@ function closeAll() {
   });
 }
 
+function layerText(band) {
+  const n = band.layers;
+  return `${n} layer${n > 1 ? "s" : ""}` + (band.note ? (band.note[0] === "+" ? " " : ", ") + band.note : "");
+}
+/* Most layers needed between 06:00 and 21:00 (blocks starting 06, 09, 12, 15, 18) */
+function summarise(list) {
+  const win = list.filter((x) => x.start >= 6 && x.start < 21);
+  let best = null;
+  win.forEach((x) => {
+    const band = advise(x, "casual", gender).band;
+    if (!best || band.layers > best.band.layers ||
+        (band.layers === best.band.layers && x.windChill < best.x.windChill)) best = { x, band };
+  });
+  if (!best) return null;
+  const box = el("div", "summary");
+  box.append(
+    el("p", "layers", `Most layers, ${win[0].label.split("–")[0]}–21:00`),
+    el("p", "big", layerText(best.band)),
+    el("p", "when", `Coldest at ${best.x.label}`)
+  );
+  return box;
+}
+
 function renderBlocks(blocks) {
   lastBlocks = blocks;
   $list.replaceChildren();
@@ -334,6 +381,8 @@ function renderBlocks(blocks) {
       day = b.day;
       const section = el("section", "day");
       section.append(el("h2", null, day));
+      const sum = mode === "school" ? null : summarise(blocks.filter((x) => x.day === day));
+      if (sum) section.append(sum);
       ol = el("ol");
       section.append(ol);
       $list.append(section);
@@ -351,8 +400,7 @@ function renderBlocks(blocks) {
     if (a.school) {
       main.append(el("p", "outfit", a.extras.length ? a.extras[0] : "Normal school clothes"));
     } else {
-      const n = a.band.layers;
-      main.append(el("p", "layers", `${n} layer${n > 1 ? "s" : ""}${a.band.note ? ", " + a.band.note : ""}`));
+      main.append(el("p", "layers", layerText(a.band)));
       main.append(el("p", "outfit", a.band.top));
       main.append(el("p", "legs", "Legs: " + a.legs));
       if (a.extras.length) main.append(el("p", "extra", a.extras.join(". ") + "."));
@@ -430,12 +478,17 @@ function useDeviceLocation() {
 function showSearchPrompt() {
   $place.textContent = "Search for a place";
   $list.textContent = "Location is off or unavailable. Search for a place to see what to wear.";
-  $q.focus();
+  openSearch();
 }
 document.getElementById("locate").addEventListener("click", useDeviceLocation);
 
 const $q = document.getElementById("q");
 const $results = document.getElementById("results");
+const $searchBox = document.getElementById("searchBox"), $searchBtn = document.getElementById("searchBtn");
+function openSearch() { $searchBox.hidden = false; $searchBtn.setAttribute("aria-expanded", "true"); $q.focus(); }
+function closeSearch() { $searchBox.hidden = true; $searchBtn.setAttribute("aria-expanded", "false"); closeResults(); }
+$searchBtn.addEventListener("click", () => ($searchBox.hidden ? openSearch() : closeSearch()));
+$q.addEventListener("keydown", (e) => { if (e.key === "Escape") { closeSearch(); $searchBtn.focus(); } });
 let timer, latest = 0;
 
 $q.addEventListener("input", () => {
@@ -464,7 +517,7 @@ function showResults(list) {
     const li = el("li", null, label);
     li.setAttribute("role", "option");
     li.tabIndex = 0;
-    const pick = () => { $q.value = ""; closeResults(); loadLocation(r.latitude, r.longitude, label); };
+    const pick = () => { $q.value = ""; closeSearch(); loadLocation(r.latitude, r.longitude, label); };
     li.addEventListener("click", pick);
     li.addEventListener("keydown", (e) => { if (e.key === "Enter") pick(); });
     $results.append(li);

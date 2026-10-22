@@ -60,6 +60,10 @@ button.head{cursor:pointer}
 #list>p{color:var(--muted)}
 footer{font-size:.8rem;color:var(--muted)}
 footer a{color:inherit}
+.warmth{flex:1 1 100%;display:flex;flex-wrap:wrap;align-items:center;gap:.25rem .75rem;font-size:.875rem;color:var(--muted)}
+.warmth[hidden]{display:none}
+.warmth input{flex:1 1 8rem;width:auto;min-width:8rem;height:2rem;padding:0;border:0;background:transparent;accent-color:var(--ink)}
+.warmth output{flex:1 1 100%}
 @media (min-width:900px){
   header,main,footer{max-width:68rem}
   #list{display:grid;grid-template-columns:1fr 1fr;gap:0 2rem;align-items:start}
@@ -106,6 +110,12 @@ footer a{color:inherit}
       <button type="button" data-gender="boys">Boys</button>
       <button type="button" data-gender="girls">Girls</button>
     </div>
+    <div class="warmth" id="warmthRow">
+      <span>Runs cold</span>
+      <input id="warmth" type="range" min="-3" max="3" step="1" value="0" aria-label="How warm you run">
+      <span>Runs hot</span>
+      <output id="warmthNote" for="warmth"></output>
+    </div>
   </div>
 </header>
 <main id="list" aria-live="polite"></main>
@@ -114,6 +124,7 @@ footer a{color:inherit}
 <script>
 /* ---------- Clothing rules ----------
    Bands are chosen by wind chill (°C). Edit this table to tune the advice. */
+const WARMTH_STEP_C = 2;        // each slider step shifts the temperature used to pick the band
 const UMBRELLA_CUTOFF_KT = 11;   // Beaufort force 4 and above: no umbrella
 const WARM_LEGS = "thermals plus jeans or joggers (ski-trousers for play)";
 const COLD_TOP = "Thermal base, jumper or hoodie, insulated coat; hat, mittens, scarf, boots";
@@ -183,7 +194,7 @@ function advise(b, mode, gender) {
   if (rain) ex.push({ title: "If it rains", alts: windy ? [["wcoat"]] : [["wcoat"], ["umbrella"]] });
   if (mode === "school") return { school: true, extras: rain ? [rain] : [], ex };
 
-  const band = bands.find((x) => b.windChill < x.below);
+  const band = bands.find((x) => b.windChill + warmth * WARMTH_STEP_C < x.below);
   const extras = [];
   if (rain) extras.push(rain);
   if (b.rainChance >= 70) { extras.push("Waterproof shoes or wellies"); ex.push({ title: "Feet", alts: [["wellies"]] }); }
@@ -245,11 +256,13 @@ async function getBlocks(lat, lon) {
 const $list = document.getElementById("list");
 const $place = document.getElementById("place");
 const $unit = document.getElementById("unit");
-let unit = "C", mode = "casual", gender = "boys", lastBlocks = [];
+const $warmth = document.getElementById("warmth"), $warmthNote = document.getElementById("warmthNote");
+let unit = "C", mode = "casual", gender = "boys", warmth = 0, lastBlocks = [];
 try {
   unit = localStorage.getItem("unit") === "F" ? "F" : "C";
   mode = localStorage.getItem("mode") === "school" ? "school" : "casual";
   gender = localStorage.getItem("gender") === "girls" ? "girls" : "boys";
+  warmth = Math.max(-3, Math.min(3, parseInt(localStorage.getItem("warmth"), 10) || 0));
 } catch {}
 
 function tempColor(c) {
@@ -374,6 +387,14 @@ function syncControls() {
   document.querySelectorAll("[data-mode]").forEach((x) => x.setAttribute("aria-pressed", x.dataset.mode === mode));
   document.querySelectorAll("[data-gender]").forEach((x) => x.setAttribute("aria-pressed", x.dataset.gender === gender));
   document.getElementById("genderSeg").hidden = mode === "school";
+  document.getElementById("warmthRow").hidden = mode === "school";
+  $warmth.value = warmth;
+  const t = Math.round((unit === "F" ? 1.8 : 1) * WARMTH_STEP_C * Math.abs(warmth)), u = "°" + unit;
+  const note = warmth === 0 ? "Typical: no adjustment"
+    : warmth < 0 ? `Runs cold: dressing as if it were ${t}${u} colder`
+    : `Runs hot: dressing as if it were ${t}${u} warmer`;
+  $warmthNote.textContent = note;
+  $warmth.setAttribute("aria-valuetext", note);
 }
 function save(k, v) { try { localStorage.setItem(k, v); } catch {} }
 function refresh() { syncControls(); if (lastBlocks.length) renderBlocks(lastBlocks); }
@@ -383,6 +404,7 @@ document.querySelectorAll("[data-mode]").forEach((x) =>
   x.addEventListener("click", () => { mode = x.dataset.mode; save("mode", mode); refresh(); }));
 document.querySelectorAll("[data-gender]").forEach((x) =>
   x.addEventListener("click", () => { gender = x.dataset.gender; save("gender", gender); refresh(); }));
+$warmth.addEventListener("input", () => { warmth = parseInt($warmth.value, 10); save("warmth", warmth); refresh(); });
 syncControls();
 
 /* ---------- Location: device first, plus place search with autocomplete ---------- */
